@@ -7,7 +7,7 @@ import random
 import shutil
 import time
 import math
-
+from random import shuffle
 width = 200
 height = 16
 
@@ -344,10 +344,34 @@ Individual = Individual_Grid
 
 
 def generate_successors(population):
-    results = []
+    results = tournament_selection(population)
+    final_results = roulette_wheel_selection(results)
     # STUDENT Design and implement this
     # Hint: Call generate_children() on some individuals and fill up results.
-    return results
+    return final_results
+
+def tournament_selection(population):
+    winners = []
+    random.shuffle(population)
+    for i in range(0,len(population),2):
+        player1 = population[i]
+        player2 = population[i+1]
+        if player1._fitness > player2._fitness:
+            winners.append(player1)
+        else:
+            winners.append(player2)
+    return winners
+
+def roulette_wheel_selection(population):
+    lucky_ones = []
+    for i in range(0,(len(population))//2):
+        rand_num = random.randint(1,len(population))
+        lucky_ones.append(population[rand_num])
+    return lucky_ones
+
+    
+
+
 
 
 def ga():
@@ -368,6 +392,7 @@ def ga():
         population = pool.map(Individual.calculate_fitness,
                               population,
                               batch_size)
+        tournament_selection(population)
         init_done = time.time()
         print("Created and calculated initial population statistics in:", init_done - init_time, "seconds")
         generation = 0
