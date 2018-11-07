@@ -346,6 +346,11 @@ Individual = Individual_Grid
 def generate_successors(population):
     results = tournament_selection(population)
     final_results = roulette_wheel_selection(results)
+    for child in range(0,len(final_results),2):
+        parent1 = final_results[child]
+        parent2 = final_results[child + 1]
+        parent1.generate_children(parent2)
+    
     # STUDENT Design and implement this
     # Hint: Call generate_children() on some individuals and fill up results.
     return final_results
@@ -365,7 +370,7 @@ def tournament_selection(population):
 def roulette_wheel_selection(population):
     lucky_ones = []
     for i in range(0,(len(population))//2):
-        rand_num = random.randint(1,len(population))
+        rand_num = random.randint(1,len(population)-1)
         lucky_ones.append(population[rand_num])
     return lucky_ones
 
