@@ -70,25 +70,70 @@ class Individual_Grid(object):
 
         left = 1
         right = width - 1
+        
         for y in range(height):
             for x in range(left, right):
-                pass
+                choice = random.randint(0,100)
+                if choice >= 0 and choice < 20:
+                    genome[y][x] = "E"
+                elif choice >= 20 and choice < 30 and y == height:
+                    genome[y][x] = "|"
+                    genome[y-1][x] = "T"
+                elif choice >= 30 and choice < 40:
+                    genome[y][x] = "B"
+                elif choice >= 40 and choice < 50:
+                    genome[y][x] = "o"
+                elif choice >= 50 and choice < 55:
+                    genome[y][x] = "M"
+                elif choice >= 55 and choice < 60:
+                    genome[y][x] = "?"
+                elif choice >= 60 and choice < 80:
+                    genome[y][x] = "X"
+                else:
+                    genome[y][x] = "-"
+                
+                
         return genome
+        
 
     # Create zero or more children from self and other
     def generate_children(self, other):
-        new_genome = copy.deepcopy(self.genome)
+        # -------------------- 50/50 new_genome --------------------
+        fifty_fifty_new_genome = copy.deepcopy(self.genome)
+        mirror_fifty_fifty_new_genome = copy.deepcopy(self.genome)
         # Leaving first and last columns alone...
         # do crossover with other
         left = 1
         right = width - 1
         for y in range(height):
             for x in range(left, right):
+                # 0 is self, 1 is other
+                random_int = random.randint(0, 2)
+                if random_int == 1:
+                    fifty_fifty_new_genome[y][x] = other.genome[y][x]
+                else:
+                    mirror_fifty_fifty_new_genome[y][x] = other.genome[y][x]
                 # STUDENT Which one should you take?  Self, or other?  Why?
                 # STUDENT consider putting more constraints on this to prevent pipes in the air, etc
-                pass
+        # -------------------- 50/50 new_genome --------------------
+        # -------------------- half/half new_genome --------------------
+        half_new_genome = copy.deepcopy(self.genome)
+        mirror_half_new_genome = copy.deepcopy(self.genome)
+        for y in range(0, 8):
+            for x in range(0, 200):
+                half_new_genome[y][x] = self.genome[y][x]
+                mirror_half_new_genome[y][x] = other.genome[y][x]
+        for y in range(8, 16):
+            for x in range(0, 200):
+                half_new_genome[y][x] = other.genome[y][x]
+                mirror_half_new_genome[y][x] = self.genome[y][x]
+        # -------------------- half/half new_genome --------------------
         # do mutation; note we're returning a one-element tuple here
-        return (Individual_Grid(new_genome),)
+        gene1 = self.mutate(fifty_fifty_new_genome)
+        gene2 = self.mutate(mirror_fifty_fifty_new_genome)
+        gene3 = self.mutate(half_new_genome)
+        gene4 = self.mutate(mirror_half_new_genome)
+        return (Individual_Grid(gene1), Individual_Grid(gene2), Individual_Grid(gene3), Individual_Grid(gene4))
 
     # Turn the genome into a level string (easy for this genome)
     def to_level(self):
@@ -344,8 +389,8 @@ Individual = Individual_Grid
 
 
 def generate_successors(population):
-    results = tournament_selection(population)
-    final_results = roulette_wheel_selection(results)
+    #results = tournament_selection(population)
+    final_results = roulette_wheel_selection(population)
     for child in range(0,len(final_results)-1,2):
         parent1 = final_results[child]
         parent2 = final_results[child + 1]
