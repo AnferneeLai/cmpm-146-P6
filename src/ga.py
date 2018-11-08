@@ -346,7 +346,7 @@ Individual = Individual_Grid
 def generate_successors(population):
     results = tournament_selection(population)
     final_results = roulette_wheel_selection(results)
-    for child in range(0,len(final_results),2):
+    for child in range(0,len(final_results)-1,2):
         parent1 = final_results[child]
         parent2 = final_results[child + 1]
         parent1.generate_children(parent2)
@@ -358,7 +358,7 @@ def generate_successors(population):
 def tournament_selection(population):
     winners = []
     random.shuffle(population)
-    for i in range(0,len(population),2):
+    for i in range(0,len(population)-1,2):
         player1 = population[i]
         player2 = population[i+1]
         if player1._fitness > player2._fitness:
@@ -368,10 +368,24 @@ def tournament_selection(population):
     return winners
 
 def roulette_wheel_selection(population):
-    lucky_ones = []
-    for i in range(0,(len(population))//2):
-        rand_num = random.randint(1,len(population)-1)
-        lucky_ones.append(population[rand_num])
+    lucky_ones = [] # will hold the dudes that we deem worthy
+    # from https://stackoverflow.com/questions/23183862/genetic-programming-difference-between-roulette-rank-and-tournament-selection
+    # 1.) Calculate the sum of all fitnesses in population (sum S).
+    # 2.) Generate a random number r in the interval [0; S].
+    # 3.) Go through the population and sum fitnesses. When the sum s is greater than r,
+    #     stop and return the individual where you are.
+    fitness_max = 0
+    for i in range(0, len(population)):
+        #print(population[i]._fitness)
+        if population[i]._fitness > fitness_max:
+            fitness_max = population[i]._fitness
+
+    for i in range(0, len(population)): # spin population times
+        spin = random.uniform(0, fitness_max) # spin
+        for j in range(0, len(population)): # iterate through population
+            if population[j]._fitness >= spin: # if at or better than the spin
+                lucky_ones.append(population[j]) # you're now part of the team
+                break # spin again
     return lucky_ones
 
     
