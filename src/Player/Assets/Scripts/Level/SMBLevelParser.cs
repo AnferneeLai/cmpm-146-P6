@@ -66,10 +66,10 @@ public class SMBLevelParser {
 
 		foreach (string line in lines) {
 
-			if (line.Length - 1 != width) {
-				Debug.LogError ("Level row has different width, they all have to have the same amount of tiles!");
-				return null;
-			}
+		//	if (line.Length - 1 != width) {
+			//	Debug.LogError ("Level row has different width, they all have to have the same amount of tiles!");
+			//	return null;
+		//	}
 		}
 			
 		char[,] tileMap = new char[height, width] ;

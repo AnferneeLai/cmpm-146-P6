@@ -244,10 +244,10 @@ public class SMBGameWorld : SMBSingleton<SMBGameWorld> {
 			return false;
 		}
 
-		if (endPoleAmount != 1) {
-			Debug.LogError ("This level does not have an end. Levels must have one and only one end.");
-			return false;
-		}
+		//if (endPoleAmount != 1) {
+			//Debug.LogError ("This level does not have an end. Levels must have one and only one end.");
+			//return false;
+		//}
 
 		return true;
 	}

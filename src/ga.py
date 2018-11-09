@@ -11,6 +11,10 @@ from random import shuffle
 width = 200
 height = 16
 
+# winners determined by our roulette selection, etc
+# mutations and crossover occurs on genomes
+# now you get your new population
+
 options = [
     "-",  # an empty space
     "X",  # a solid wall
@@ -70,33 +74,31 @@ class Individual_Grid(object):
 
         left = 1
         right = width - 1
-        
+
         for y in range(height):
             for x in range(left, right):
-                choice = random.randint(0,100)
-                if choice >= 0 and choice < 20:
+                choice = random.randint(0, 100)
+                if choice >= 0 and choice < 5:
                     genome[y][x] = "E"
-                elif choice >= 20 and choice < 30 and y == height:
+                elif choice >= 20 and choice < 25 and y == height-1:
                     genome[y][x] = "|"
                     genome[y-1][x] = "T"
-                elif choice >= 30 and choice < 40:
+                elif choice >= 30 and choice < 35:
                     genome[y][x] = "B"
-                elif choice >= 40 and choice < 50:
+                elif choice >= 40 and choice < 45:
                     genome[y][x] = "o"
                 elif choice >= 50 and choice < 55:
                     genome[y][x] = "M"
                 elif choice >= 55 and choice < 60:
                     genome[y][x] = "?"
-                elif choice >= 60 and choice < 80:
+                elif (choice >= 60 and choice < 65) or y == height-1:
                     genome[y][x] = "X"
                 else:
                     genome[y][x] = "-"
-                
-                
         return genome
-        
 
     # Create zero or more children from self and other
+    # this is crossover...?
     def generate_children(self, other):
         # -------------------- 50/50 new_genome --------------------
         fifty_fifty_new_genome = copy.deepcopy(self.genome)
@@ -129,11 +131,8 @@ class Individual_Grid(object):
                 mirror_half_new_genome[y][x] = self.genome[y][x]
         # -------------------- half/half new_genome --------------------
         # do mutation; note we're returning a one-element tuple here
-        gene1 = self.mutate(fifty_fifty_new_genome)
-        gene2 = self.mutate(mirror_fifty_fifty_new_genome)
-        gene3 = self.mutate(half_new_genome)
-        gene4 = self.mutate(mirror_half_new_genome)
-        return (Individual_Grid(gene1), Individual_Grid(gene2), Individual_Grid(gene3), Individual_Grid(gene4))
+        # Individual_DE(self.mutate(ga))
+        return (Individual_Grid(self.mutate(fifty_fifty_new_genome)), )# Individual_Grid(self.mutate(mirror_fifty_fifty_new_genome)), Individual_Grid(self.mutate(half_new_genome)), Individual_Grid(self.mutate(mirror_half_new_genome)))
 
     # Turn the genome into a level string (easy for this genome)
     def to_level(self):
@@ -350,13 +349,15 @@ class Individual_DE(object):
                     dx = de[3]  # -1 or 1
                     for x2 in range(1, h + 1):
                         for y in range(x2 if dx == 1 else h - x2):
-                            base[clip(0, height - y - 1, height - 1)][clip(1, x + x2, width - 2)] = "X"
+                            base[clip(0, height - y - 1, height - 1)
+                                 ][clip(1, x + x2, width - 2)] = "X"
                 elif de_type == "1_platform":
                     w = de[2]
                     h = de[3]
                     madeof = de[4]  # from "?", "X", "B"
                     for x2 in range(w):
-                        base[clip(0, height - h - 1, height - 1)][clip(1, x + x2, width - 2)] = madeof
+                        base[clip(0, height - h - 1, height - 1)
+                             ][clip(1, x + x2, width - 2)] = madeof
                 elif de_type == "2_enemy":
                     base[height - 2][x] = "E"
             self._level = base
@@ -374,12 +375,16 @@ class Individual_DE(object):
         elt_count = random.randint(8, 128)
         g = [random.choice([
             (random.randint(1, width - 2), "0_hole", random.randint(1, 8)),
-            (random.randint(1, width - 2), "1_platform", random.randint(1, 8), random.randint(0, height - 1), random.choice(["?", "X", "B"])),
+            (random.randint(1, width - 2), "1_platform", random.randint(1, 8),
+             random.randint(0, height - 1), random.choice(["?", "X", "B"])),
             (random.randint(1, width - 2), "2_enemy"),
             (random.randint(1, width - 2), "3_coin", random.randint(0, height - 1)),
-            (random.randint(1, width - 2), "4_block", random.randint(0, height - 1), random.choice([True, False])),
-            (random.randint(1, width - 2), "5_qblock", random.randint(0, height - 1), random.choice([True, False])),
-            (random.randint(1, width - 2), "6_stairs", random.randint(1, height - 4), random.choice([-1, 1])),
+            (random.randint(1, width - 2), "4_block",
+             random.randint(0, height - 1), random.choice([True, False])),
+            (random.randint(1, width - 2), "5_qblock",
+             random.randint(0, height - 1), random.choice([True, False])),
+            (random.randint(1, width - 2), "6_stairs",
+             random.randint(1, height - 4), random.choice([-1, 1])),
             (random.randint(1, width - 2), "7_pipe", random.randint(2, height - 4))
         ]) for i in range(elt_count)]
         return Individual_DE(g)
@@ -389,21 +394,25 @@ Individual = Individual_Grid
 
 
 def generate_successors(population):
+    next_generation = []
     #results = tournament_selection(population)
-    final_results = roulette_wheel_selection(population)
-    for child in range(0,len(final_results)-1,2):
+    final_results = roulette_wheel_selection(population) # arg was results
+    for child in range(0, len(final_results) - 1, 2):
         parent1 = final_results[child]
         parent2 = final_results[child + 1]
-        parent1.generate_children(parent2)
-    
+        next_generation.append(parent1.generate_children(parent2)[0])
+        next_generation.append(parent2.generate_children(parent1)[0])
+        # we generate the children, but are they ever part of final results?
+
     # STUDENT Design and implement this
     # Hint: Call generate_children() on some individuals and fill up results.
-    return final_results
+    return next_generation
+
 
 def tournament_selection(population):
     winners = []
     random.shuffle(population)
-    for i in range(0,len(population)-1,2):
+    for i in range(0, len(population)-1, 2):
         player1 = population[i]
         player2 = population[i+1]
         if player1._fitness > player2._fitness:
@@ -411,6 +420,7 @@ def tournament_selection(population):
         else:
             winners.append(player2)
     return winners
+
 
 def roulette_wheel_selection(population):
     lucky_ones = [] # will hold the dudes that we deem worthy
@@ -421,21 +431,19 @@ def roulette_wheel_selection(population):
     #     stop and return the individual where you are.
     fitness_max = 0
     for i in range(0, len(population)):
-        #print(population[i]._fitness)
-        if population[i]._fitness > fitness_max:
-            fitness_max = population[i]._fitness
-
-    for i in range(0, len(population)): # spin population times
+        if population[i].fitness() > fitness_max:
+            fitness_max = population[i].fitness()
+    #saved_indexes = [] # list for saving all of the indexes with items we have already received
+    for i in range(0, len(population)): # spin population times IF WE SPIN LEN(POPULATION) TIMES, WON'T WE EVENTUALLY GET A REPEAT OR THE SAME DUDE???
         spin = random.uniform(0, fitness_max) # spin
         for j in range(0, len(population)): # iterate through population
-            if population[j]._fitness >= spin: # if at or better than the spin
-                lucky_ones.append(population[j]) # you're now part of the team
-                break # spin again
+            #if not j in saved_indexes:
+                if population[j].fitness() >= spin: # if at or better than the spin
+                    lucky_ones.append(population[j]) # you're now part of the team
+                    #saved_indexes.append(j) # we won't grab this one again
+                    break # spin again
+    print(len(lucky_ones))
     return lucky_ones
-
-    
-
-
 
 
 def ga():
@@ -444,7 +452,8 @@ def ga():
     # Code to parallelize some computations
     batches = os.cpu_count()
     if pop_limit % batches != 0:
-        print("It's ideal if pop_limit divides evenly into " + str(batches) + " batches.")
+        print("It's ideal if pop_limit divides evenly into " +
+              str(batches) + " batches.")
     batch_size = int(math.ceil(pop_limit / batches))
     with mpool.Pool(processes=os.cpu_count()) as pool:
         init_time = time.time()
@@ -458,7 +467,8 @@ def ga():
                               batch_size)
         tournament_selection(population)
         init_done = time.time()
-        print("Created and calculated initial population statistics in:", init_done - init_time, "seconds")
+        print("Created and calculated initial population statistics in:",
+              init_done - init_time, "seconds")
         generation = 0
         start = time.time()
         now = start
@@ -471,7 +481,8 @@ def ga():
                     best = max(population, key=Individual.fitness)
                     print("Generation:", str(generation))
                     print("Max fitness:", str(best.fitness()))
-                    print("Average generation time:", (now - start) / generation)
+                    print("Average generation time:",
+                          (now - start) / generation)
                     print("Net time:", now - start)
                     with open("levels/last.txt", 'w') as f:
                         for row in best.to_level():

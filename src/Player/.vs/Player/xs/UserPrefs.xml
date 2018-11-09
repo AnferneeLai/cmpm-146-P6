@@ -1,0 +1,16 @@
+﻿<Properties StartupConfiguration="{D55E595C-D8AC-B8C1-F1BC-BCC3B1DCE059}|">
+  <MonoDevelop.Ide.ItemProperties.Assembly-CSharp PreferredExecutionTarget="Unity.Editor" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Resources/Levels/Level1.txt">
+    <Files>
+      <File FileName="Assets/Resources/Levels/Level1.txt" Line="17" Column="1" />
+      <File FileName="Assets/Scripts/Level/SMBLevelParser.cs" Line="72" Column="5" />
+      <File FileName="Assets/Scripts/GameWorld/SMBGameWorld.cs" Line="248" Column="8" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MultiItemStartupConfigurations />
+</Properties>
