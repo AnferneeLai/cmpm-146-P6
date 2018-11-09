@@ -80,7 +80,7 @@ class Individual_Grid(object):
                 choice = random.randint(0, 100)
                 if choice >= 0 and choice < 5:
                     genome[y][x] = "E"
-                elif choice >= 20 and choice < 25 and y == height-1:
+                elif choice >= 20 and choice < 25 and y == height:
                     genome[y][x] = "|"
                     genome[y-1][x] = "T"
                 elif choice >= 30 and choice < 35:
@@ -395,8 +395,10 @@ Individual = Individual_Grid
 
 def generate_successors(population):
     next_generation = []
-    #results = tournament_selection(population)
-    final_results = roulette_wheel_selection(population) # arg was results
+    results = tournament_selection(population)
+    new_results = roulette_wheel_selection(results) # arg was results
+    final_results = results + new_results
+    print (len(final_results))
     for child in range(0, len(final_results) - 1, 2):
         parent1 = final_results[child]
         parent2 = final_results[child + 1]
@@ -442,7 +444,7 @@ def roulette_wheel_selection(population):
                     lucky_ones.append(population[j]) # you're now part of the team
                     #saved_indexes.append(j) # we won't grab this one again
                     break # spin again
-    print(len(lucky_ones))
+    #print(len(lucky_ones))
     return lucky_ones
 
 

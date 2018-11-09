@@ -2,7 +2,7 @@
   <MonoDevelop.Ide.ItemProperties.Assembly-CSharp PreferredExecutionTarget="Unity.Editor" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Resources/Levels/Level1.txt">
     <Files>
-      <File FileName="Assets/Resources/Levels/Level1.txt" Line="17" Column="1" />
+      <File FileName="Assets/Resources/Levels/Level1.txt" Line="14" Column="202" />
       <File FileName="Assets/Scripts/Level/SMBLevelParser.cs" Line="72" Column="5" />
       <File FileName="Assets/Scripts/GameWorld/SMBGameWorld.cs" Line="248" Column="8" />
     </Files>
