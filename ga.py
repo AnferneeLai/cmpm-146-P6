@@ -54,7 +54,7 @@ class Individual_Grid(object):
             pathPercentage=0.5,
             emptyPercentage=0.6,
             linearity=-0.5,
-            solvability=17.0 # was 2.0
+            solvability=2.0
         )
         self._fitness = sum(map(lambda m: coefficients[m] * measurements[m],
                                 coefficients))
@@ -68,26 +68,25 @@ class Individual_Grid(object):
 
     # Mutate a genome into a new genome.  Note that this is a _genome_, not an individual!
     def mutate(self, genome):
-        # STUDENT implement a mutation operator, also consider not mutating this individual
-        # STUDENT also consider weighting the different tile types so it's not uniformly random
-        # STUDENT consider putting more constraints on this to prevent pipes in the air, etc
 
         left = 1
         right = width - 1
 
         for y in range(height-1):
             for x in range(left, right):
-                change_block = random.randint(0, 10)
+                change_block = random.randint(0, 9)
                 if change_block > 7: # 20% chance to change a block
                     if genome[y][x] == "-": # make it so empty space only has 10% chance to change really
-                        coin_flip = random.randint(0, 2)
+                        coin_flip = random.randint(0, 1)
                         if coin_flip == 0:
                             continue
+                    if genome[y][x] == 'T' or genome[y][x] == '|':
+                        continue
                     choice = random.randint(0, 100)
                     if choice >= 0 and choice < 10: # enemy: 10%
                         genome[y][x] = "E"
-                    elif choice >= 10 and choice < 15 and y == height: # pipe: 5%
-                        if y == height: # pipes need to spawn on ground
+                    elif choice >= 10 and choice < 15: # pipe: 5%
+                        if y == (height-1): # pipes need to spawn on ground
                             genome[y][x] = "|"
                             genome[y-1][x] = "T"
                     elif choice >= 15 and choice < 20: # breakable block: 5%
@@ -115,19 +114,19 @@ class Individual_Grid(object):
     def generate_children(self, other):
         # -------------------- 50/50 new_genome --------------------
         fifty_fifty_new_genome = copy.deepcopy(self.genome)
-        mirror_fifty_fifty_new_genome = copy.deepcopy(self.genome)
+        #mirror_fifty_fifty_new_genome = copy.deepcopy(self.genome)
         # Leaving first and last columns alone...
         # do crossover with other
         left = 1
-        #right = width - 1
+        right = width - 1
         for y in range(height):
-            for x in range(left, width):
+            for x in range(left, right):
                 # 0 is self, 1 is other
                 random_int = random.randint(0, 2)
                 if random_int == 1:
                     fifty_fifty_new_genome[y][x] = other.genome[y][x]
-                else:
-                    mirror_fifty_fifty_new_genome[y][x] = other.genome[y][x]
+                #else:
+                    #mirror_fifty_fifty_new_genome[y][x] = other.genome[y][x]
                 # STUDENT Which one should you take?  Self, or other?  Why?
                 # STUDENT consider putting more constraints on this to prevent pipes in the air, etc
         # -------------------- 50/50 new_genome --------------------
@@ -141,11 +140,12 @@ class Individual_Grid(object):
         for y in range(8, 16):
             for x in range(0, 200):
                 half_new_genome[y][x] = other.genome[y][x]
-                mirror_half_new_genome[y][x] = self.genome[y][x]
-        # -------------------- half/half new_genome --------------------'''
+                mirror_half_new_genome[y][x] = self.genome[y][x]'''
+        # -------------------- half/half new_genome --------------------
         # do mutation; note we're returning a one-element tuple here
         # Individual_DE(self.mutate(ga))
-        return (Individual_Grid(self.mutate(fifty_fifty_new_genome)), )#Individual_Grid(self.mutate(mirror_fifty_fifty_new_genome)) Individual_Grid(self.mutate(mirror_fifty_fifty_new_genome)), Individual_Grid(self.mutate(half_new_genome)), Individual_Grid(self.mutate(mirror_half_new_genome)))
+        # Individual_Grid(self.mutate(mirror_fifty_fifty_new_genome)), Individual_Grid(self.mutate(half_new_genome)), Individual_Grid(self.mutate(mirror_half_new_genome)))
+        return (Individual_Grid(self.mutate(fifty_fifty_new_genome)), )
 
     # Turn the genome into a level string (easy for this genome)
     def to_level(self):
@@ -215,12 +215,12 @@ class Individual_DE(object):
         # STUDENT Add more metrics?
         # STUDENT Improve this with any code you like
         coefficients = dict(
-            meaningfulJumpVariance=0.5,
-            negativeSpace=0.6,
+            meaningfulJumpVariance=2.0,
+            negativeSpace=0.1,
             pathPercentage=0.5,
             emptyPercentage=0.6,
             linearity=-0.5,
-            solvability=17.0 # was 2.0
+            solvability=7.0
         )
         penalties = 0
         # STUDENT For example, too many stairs are unaesthetic.  Let's penalize that
@@ -239,7 +239,7 @@ class Individual_DE(object):
     def mutate(self, new_genome):
         # STUDENT How does this work?  Explain it in your writeup.
         # STUDENT consider putting more constraints on this, to prevent generating weird things
-        if random.random() < 0.1 and len(new_genome) > 0:
+        if random.random() < 0.3 and len(new_genome) > 0:
             to_change = random.randint(0, len(new_genome) - 1)
             de = new_genome[to_change]
             new_de = de
@@ -407,23 +407,21 @@ Individual = Individual_Grid
 
 
 def generate_successors(population):
-    #next_generation = []
-    #results = tournament_selection(population)
-    final_results = roulette_wheel_selection(population) # arg was results
+    next_generation = []
+    results = tournament_selection(population)
+    new_results = roulette_wheel_selection(results)  # arg was results
+    final_results = results + new_results
+    #print(len(final_results))
     for child in range(0, len(final_results) - 1, 2):
         parent1 = final_results[child]
         parent2 = final_results[child + 1]
-        random_int = random.randint(0, 2) # flip a coin to see what parent gets replaced
-        if random_int == 0: # parent1 gets replaced
-            final_results[child] = parent1.generate_children(parent2)[0]
-        else: # parent 2 gets replaced
-            final_results[child + 1] = parent1.generate_children(parent2)[0]
-        #next_generation.append(parent1.generate_children(parent2)[1]) # we don't retain anything from the last generation, but we can do that by instead coin flipping and 
-                                                                      # overwriting something in original population
+        next_generation.append(parent1.generate_children(parent2)[0])
+        next_generation.append(parent2.generate_children(parent1)[0])
+        # we generate the children, but are they ever part of final results?
 
     # STUDENT Design and implement this
     # Hint: Call generate_children() on some individuals and fill up results.
-    return final_results #next_generation
+    return next_generation
 
 
 def tournament_selection(population):
@@ -440,7 +438,7 @@ def tournament_selection(population):
 
 
 def roulette_wheel_selection(population):
-    lucky_ones = [] # will hold the dudes that we deem worthy
+    lucky_ones = []  # will hold the dudes that we deem worthy
     # from https://stackoverflow.com/questions/23183862/genetic-programming-difference-between-roulette-rank-and-tournament-selection
     # 1.) Calculate the sum of all fitnesses in population (sum S).
     # 2.) Generate a random number r in the interval [0; S].
@@ -451,15 +449,17 @@ def roulette_wheel_selection(population):
         if population[i].fitness() > fitness_max:
             fitness_max = population[i].fitness()
     #saved_indexes = [] # list for saving all of the indexes with items we have already received
-    for i in range(0, len(population)): # spin population times IF WE SPIN LEN(POPULATION) TIMES, WON'T WE EVENTUALLY GET A REPEAT OR THE SAME DUDE???
-        spin = random.uniform(0, fitness_max) # spin
-        for j in range(0, len(population)): # iterate through population
+    # spin population times IF WE SPIN LEN(POPULATION) TIMES, WON'T WE EVENTUALLY GET A REPEAT OR THE SAME DUDE???
+    for i in range(0, len(population)):
+        spin = random.uniform(0, fitness_max)  # spin
+        for j in range(0, len(population)):  # iterate through population
             #if not j in saved_indexes:
-                if population[j].fitness() >= spin: # if at or better than the spin
-                    lucky_ones.append(population[j]) # you're now part of the team
+                if population[j].fitness() >= spin:  # if at or better than the spin
+                    # you're now part of the team
+                    lucky_ones.append(population[j])
                     #saved_indexes.append(j) # we won't grab this one again
-                    break # spin again
-    print(len(lucky_ones))
+                    break  # spin again
+    #print(len(lucky_ones))
     return lucky_ones
 
 
@@ -475,9 +475,7 @@ def ga():
     with mpool.Pool(processes=os.cpu_count()) as pool:
         init_time = time.time()
         # STUDENT (Optional) change population initialization
-        population = [Individual.random_individual() if random.random() < 0.9
-                      else Individual.empty_individual()
-                      for _g in range(pop_limit)]
+        population = [Individual.empty_individual() for _g in range(pop_limit)]
         # But leave this line alone; we have to reassign to population because we get a new population that has more cached stuff in it.
         population = pool.map(Individual.calculate_fitness,
                               population,
